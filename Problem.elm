@@ -1,6 +1,6 @@
-module Problem exposing (Problem, Result(..), create, toResult)
+module Problem exposing (Problem, Letters, Result(..), create, toResult)
 
-import String
+import Cons exposing (Cons, cons)
 
 
 type alias Guess =
@@ -8,7 +8,7 @@ type alias Guess =
 
 
 type alias Letters =
-    List Char
+    Cons Char
 
 
 type Result
@@ -21,26 +21,21 @@ type alias Problem =
     { hint : String, solution : Letters }
 
 
-create : String -> String -> Problem
+create : String -> Cons Char -> Problem
 create hint solution =
     { hint = hint
-    , solution = String.toList solution
+    , solution = solution
     }
 
 
 toResult : Problem -> Guess -> Result
-toResult puzzle guess =
-    case List.head puzzle.solution of
-        Just next ->
-            if next == guess then
-                case List.tail puzzle.solution of
-                    Just tail ->
-                        Correct tail
+toResult { solution } guess =
+    if guess == Cons.head solution then
+        case Cons.tail solution of
+            head :: tail ->
+                Correct (cons head tail)
 
-                    Nothing ->
-                        Solved
-            else
-                Wrong
-
-        Nothing ->
-            Solved
+            [] ->
+                Solved
+    else
+        Wrong

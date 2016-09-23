@@ -1,10 +1,23 @@
 module Puzzle exposing (Puzzle, create, toProgress)
 
-import Problem exposing (Problem)
+import Problem exposing (Problem, Letters)
+import Cons exposing (Cons, cons)
+
+
+-- TODO: Make puzzle a zip list
 
 
 type alias Puzzle =
-    List Problem
+    { solvedProblems : List Problem
+    , currentProblem : Problem
+    , remainingProblems : List Problem
+    }
+
+
+type alias PuzzleLetters =
+    { solvedLetters : Maybe Letters
+    , remainingLetters : Letters
+    }
 
 
 type Progress
@@ -12,31 +25,44 @@ type Progress
     | Finish
 
 
-create : List ( String, String ) -> Puzzle
+create : Cons ( String, Letters ) -> Puzzle
 create problems =
-    List.map
-        (\( hint, solution ) -> Problem.create hint solution)
-        problems
+    let
+        problems' =
+            Cons.map
+                (\( hint, solution ) -> Problem.create hint solution)
+                problems
+    in
+        { solvedProblems = []
+        , currentProblem = Cons.head problems'
+        , remainingProblems = Cons.tail problems'
+        }
 
 
 toProgress : Puzzle -> Problem -> Problem.Result -> Progress
-toProgress stage puzzle result =
+toProgress puzzle problem result =
     case result of
         Problem.Wrong ->
-            Continue puzzle
+            Continue problem
 
         Problem.Correct letters ->
-            Continue { puzzle | solution = letters }
+            Continue { problem | solution = letters }
 
         Problem.Solved ->
-            case List.tail stage of
-                Just tail ->
-                    case List.head tail of
-                        Just puzzle ->
-                            Continue puzzle
-
-                        Nothing ->
-                            Finish
+            case List.head puzzle.remainingProblems of
+                Just puzzle ->
+                    Continue puzzle
 
                 Nothing ->
                     Finish
+
+
+toPuzzleLetters : Puzzle -> PuzzleLetters
+toPuzzleLetters { solvedProblems, currentProblem, remainingProblems } =
+    { solvedLetters =
+        List.map .solution solvedProblems
+            |> List.map Cons.toList
+            |> List.concat
+            |> Cons.fromList
+    , remainingLetters = Cons.concat (cons currentProblem.solution (List.map .solution remainingProblems))
+    }
