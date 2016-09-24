@@ -1,43 +1,98 @@
 module Board exposing (..)
 
 import Cons exposing (Cons, cons)
-import Puzzle exposing (PuzzleLetters)
+import Puzzle exposing (Puzzle(..))
+import Problem exposing (Problem)
+import Attempt
+import Key exposing (Letter(..))
+import Random
 
 
 type Cell
-    = Cell Char
+    = Cell Letter
     | EmptyCell
 
 
-type alias Grid =
+type alias Board =
     { cells : Cons Cell
     , width : Int
+    , seed : Int
     }
 
 
-gridFromChars : Maybe Grid -> Letters -> Int -> Grid
-gridFromChars grid letters width =
-    case grid of
-        Just grid ->
-            { cells = emptyCells grid.cells letters
-            , width = width
-            }
+cellsFromProblem : Problem -> Cons Cell
+cellsFromProblem { answer, attempt } =
+    case attempt of
+        Just attempt' ->
+            let
+                attemptLetters =
+                    case Attempt.last attempt' of
+                        Attempt.Failure _ ->
+                            let
+                                allLetters =
+                                    Attempt.toLetters attempt'
+                            in
+                                cons
+                                    (Cons.head allLetters)
+                                    (List.take
+                                        (List.length (Cons.tail allLetters) - 1)
+                                        (Cons.tail allLetters)
+                                    )
+
+                        Attempt.Success _ _ ->
+                            Attempt.toLetters attempt'
+
+                        Attempt.Complete _ ->
+                            Attempt.toLetters attempt'
+
+                        Attempt.Incomplete _ ->
+                            Attempt.toLetters attempt'
+            in
+                Cons.indexedMap
+                    (\index letter ->
+                        case index < (Cons.length attemptLetters) - 1 of
+                            True ->
+                                Cell letter
+
+                            False ->
+                                EmptyCell
+                    )
+                    answer
 
         Nothing ->
-            { cells = Cons.map (\letter -> Cell letter) letters
-            , width = width
-            }
+            Cons.map (\letter -> Cell letter) answer
 
 
-emptyCells : Cons Cell -> PuzzleLetters -> Cons Cell
-emptyCells cells puzzleLetters =
-    cells
+fromPuzzle : Puzzle -> Int -> Int -> Board
+fromPuzzle puzzle width seed =
+    case puzzle of
+        InProgress problems ->
+            let
+                cells =
+                    Cons.map cellsFromProblem problems
 
+                flatCells =
+                    Cons.concat cells
 
+                seed' =
+                    Random.initialSeed seed
 
--- Map over the cells letters
--- If empty, skip
--- If a cell, check whether that letter is in new letters
--- if it is, retain the value
--- dont let that member be compared to the next cell somehow
--- if it's not, then change it to an empty cell
+                randomValues =
+                    Random.step
+                        (Random.map
+                            (\n -> cons n [])
+                            (Random.int 0 100)
+                        )
+                        seed'
+
+                shuffledCells =
+                    (Cons.map fst
+                        (Cons.sortBy snd
+                            (Cons.map2 (,) flatCells (fst randomValues))
+                        )
+                    )
+            in
+                { cells = shuffledCells, width = width, seed = seed }
+
+        Finished ->
+            { cells = cons EmptyCell [], width = width, seed = seed }

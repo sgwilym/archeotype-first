@@ -1,41 +1,35 @@
-module Problem exposing (Problem, Letters, Result(..), create, toResult)
+module Problem exposing (Problem, create, update)
 
-import Cons exposing (Cons, cons)
-
-
-type alias Guess =
-    Char
-
-
-type alias Letters =
-    Cons Char
-
-
-type Result
-    = Wrong
-    | Correct Letters
-    | Solved
+import Attempt exposing (Attempt(..))
+import Key exposing (AttemptKey(..), Letter)
+import Cons exposing (Cons)
 
 
 type alias Problem =
-    { hint : String, solution : Letters }
-
-
-create : String -> Cons Char -> Problem
-create hint solution =
-    { hint = hint
-    , solution = solution
+    { hint : String
+    , answer : Cons Letter
+    , attempt : Maybe Attempt
     }
 
 
-toResult : Problem -> Guess -> Result
-toResult { solution } guess =
-    if guess == Cons.head solution then
-        case Cons.tail solution of
-            head :: tail ->
-                Correct (cons head tail)
+create : String -> Cons Letter -> Problem
+create hint answer =
+    { hint = hint
+    , answer = answer
+    , attempt = Nothing
+    }
 
-            [] ->
-                Solved
-    else
-        Wrong
+
+update : AttemptKey -> Problem -> Problem
+update key problem =
+    case problem.attempt of
+        Just attempt ->
+            { problem | attempt = Attempt.update key problem.answer attempt }
+
+        Nothing ->
+            case key of
+                LetterKey letter ->
+                    { problem | attempt = Just (Attempt.create letter problem.answer) }
+
+                Backspace ->
+                    problem

@@ -1,68 +1,103 @@
-module Puzzle exposing (Puzzle, create, toProgress)
+module Puzzle exposing (..)
 
-import Problem exposing (Problem, Letters)
+import Problem exposing (Problem)
+import Key exposing (Key(..), Letter)
 import Cons exposing (Cons, cons)
+import Attempt
 
 
--- TODO: Make puzzle a zip list
+type Puzzle
+    = InProgress (Cons Problem)
+    | Finished
 
 
-type alias Puzzle =
-    { solvedProblems : List Problem
-    , currentProblem : Problem
-    , remainingProblems : List Problem
-    }
-
-
-type alias PuzzleLetters =
-    { solvedLetters : Maybe Letters
-    , remainingLetters : Letters
-    }
-
-
-type Progress
-    = Continue Problem
-    | Finish
-
-
-create : Cons ( String, Letters ) -> Puzzle
+create : Cons ( String, Cons Letter ) -> Puzzle
 create problems =
-    let
-        problems' =
-            Cons.map
-                (\( hint, solution ) -> Problem.create hint solution)
-                problems
-    in
-        { solvedProblems = []
-        , currentProblem = Cons.head problems'
-        , remainingProblems = Cons.tail problems'
-        }
+    InProgress
+        (Cons.map
+            (\( hint, answer ) -> Problem.create hint answer)
+            problems
+        )
 
 
-toProgress : Puzzle -> Problem -> Problem.Result -> Progress
-toProgress puzzle problem result =
-    case result of
-        Problem.Wrong ->
-            Continue problem
+cycleNext : Cons Problem -> Cons Problem
+cycleNext problems =
+    case Cons.tail problems of
+        [ head ] ->
+            cons head [ Cons.head problems ]
 
-        Problem.Correct letters ->
-            Continue { problem | solution = letters }
+        head :: rest ->
+            cons head (rest ++ [ Cons.head problems ])
 
-        Problem.Solved ->
-            case List.head puzzle.remainingProblems of
-                Just puzzle ->
-                    Continue puzzle
-
-                Nothing ->
-                    Finish
+        [] ->
+            problems
 
 
-toPuzzleLetters : Puzzle -> PuzzleLetters
-toPuzzleLetters { solvedProblems, currentProblem, remainingProblems } =
-    { solvedLetters =
-        List.map .solution solvedProblems
-            |> List.map Cons.toList
-            |> List.concat
-            |> Cons.fromList
-    , remainingLetters = Cons.concat (cons currentProblem.solution (List.map .solution remainingProblems))
-    }
+cyclePrevious : Cons Problem -> Cons Problem
+cyclePrevious problems =
+    case Cons.tail problems of
+        [ head ] ->
+            cons head [ Cons.head problems ]
+
+        head :: rest ->
+            let
+                lastProblem =
+                    Cons.head (Cons.reverse problems)
+
+                remainingProblems =
+                    List.take (List.length rest - 1) rest
+            in
+                cons lastProblem ([ Cons.head problems ] ++ remainingProblems)
+
+        [] ->
+            problems
+
+
+update : Key -> Puzzle -> Puzzle
+update key puzzle =
+    case puzzle of
+        InProgress problems ->
+            case key of
+                Space ->
+                    InProgress (cycleNext problems)
+
+                Down ->
+                    InProgress (cycleNext problems)
+
+                Up ->
+                    InProgress (cyclePrevious problems)
+
+                ProblemKey key ->
+                    let
+                        problem =
+                            Cons.head problems
+
+                        problem' =
+                            Problem.update key problem
+
+                        problems' =
+                            cons problem' (Cons.tail problems)
+                    in
+                        case
+                            Cons.all
+                                (\{ attempt } ->
+                                    case attempt of
+                                        Just attempt' ->
+                                            Attempt.complete attempt'
+
+                                        Nothing ->
+                                            False
+                                )
+                                problems'
+                        of
+                            True ->
+                                Finished
+
+                            False ->
+                                InProgress problems'
+
+                Unrecognised ->
+                    puzzle
+
+        Finished ->
+            Finished
