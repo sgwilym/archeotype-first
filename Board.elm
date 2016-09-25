@@ -1,11 +1,12 @@
-module Board exposing (..)
+module Board exposing (Board, Cell(..), fromPuzzle)
 
 import Cons exposing (Cons, cons)
 import Puzzle exposing (Puzzle(..))
 import Problem exposing (Problem)
 import Attempt
-import Key exposing (Letter(..))
+import Letter exposing (Letter(..))
 import Random
+import String
 
 
 type Cell
@@ -50,12 +51,12 @@ cellsFromProblem { answer, attempt } =
             in
                 Cons.indexedMap
                     (\index letter ->
-                        case index < (Cons.length attemptLetters) - 1 of
+                        case index < (Cons.length attemptLetters) of
                             True ->
-                                Cell letter
+                                EmptyCell
 
                             False ->
-                                EmptyCell
+                                Cell letter
                     )
                     answer
 
@@ -68,8 +69,26 @@ fromPuzzle puzzle width seed =
     case puzzle of
         InProgress problems ->
             let
+                sortedProblems =
+                    Cons.map fst
+                        (Cons.sortBy snd
+                            (Cons.map2
+                                (,)
+                                problems
+                                (Cons.map
+                                    (\problem ->
+                                        String.fromList
+                                            (Cons.toList
+                                                (Cons.map Letter.toChar problem.answer)
+                                            )
+                                    )
+                                    problems
+                                )
+                            )
+                        )
+
                 cells =
-                    Cons.map cellsFromProblem problems
+                    Cons.map cellsFromProblem sortedProblems
 
                 flatCells =
                     Cons.concat cells
@@ -77,18 +96,30 @@ fromPuzzle puzzle width seed =
                 seed' =
                     Random.initialSeed seed
 
-                randomValues =
+                randomCons cellSeed =
                     Random.step
                         (Random.map
                             (\n -> cons n [])
                             (Random.int 0 100)
                         )
-                        seed'
+                        (Random.initialSeed
+                            cellSeed
+                        )
+
+                randomValues =
+                    Cons.concat
+                        (Cons.indexedMap
+                            ((\index _ ->
+                                fst (randomCons (seed + index))
+                             )
+                            )
+                            flatCells
+                        )
 
                 shuffledCells =
                     (Cons.map fst
                         (Cons.sortBy snd
-                            (Cons.map2 (,) flatCells (fst randomValues))
+                            (Cons.map2 (,) flatCells randomValues)
                         )
                     )
             in

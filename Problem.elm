@@ -1,7 +1,8 @@
 module Problem exposing (Problem, create, update)
 
 import Attempt exposing (Attempt(..))
-import Key exposing (AttemptKey(..), Letter)
+import Key exposing (AttemptKey(..))
+import Letter exposing (Letter)
 import Cons exposing (Cons)
 
 

@@ -1,6 +1,7 @@
 module Attempt exposing (Attempt(..), create, update, last, complete, toLetters)
 
-import Key exposing (AttemptKey(..), Letter)
+import Key exposing (AttemptKey(..))
+import Letter exposing (Letter)
 import Cons exposing (Cons, cons)
 
 
@@ -44,7 +45,7 @@ update key answer attempt =
                             List.take (length - 1) tail
                     in
                         Just
-                            ((fromLetters (cons head remainingTail))
+                            ((fromLetters (cons (Cons.head (toLetters attempt)) ([ head ] ++ remainingTail)))
                                 (Cons.toList answer)
                             )
 

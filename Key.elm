@@ -1,6 +1,7 @@
-module Key exposing (Key(..), AttemptKey(..), Letter(..), fromKeyCode)
+module Key exposing (Key(..), AttemptKey(..), fromKeyCode)
 
 import Keyboard exposing (KeyCode)
+import Letter exposing (Letter(..))
 
 
 type Key
@@ -16,38 +17,9 @@ type AttemptKey
     | Backspace
 
 
-type Letter
-    = A
-    | B
-    | C
-    | D
-    | E
-    | F
-    | G
-    | H
-    | I
-    | J
-    | K
-    | L
-    | M
-    | N
-    | O
-    | P
-    | Q
-    | R
-    | S
-    | T
-    | U
-    | V
-    | W
-    | X
-    | Y
-    | Z
-
-
 fromKeyCode : KeyCode -> Key
 fromKeyCode code =
-    case code of
+    case Letter.transposeCase code of
         65 ->
             ProblemKey (LetterKey A)
 

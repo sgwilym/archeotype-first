@@ -1,7 +1,8 @@
 module Puzzle exposing (..)
 
 import Problem exposing (Problem)
-import Key exposing (Key(..), Letter)
+import Key exposing (Key(..))
+import Letter exposing (Letter)
 import Cons exposing (Cons, cons)
 import Attempt
 
