@@ -21,6 +21,10 @@ type alias Board =
     }
 
 
+
+-- BUG: the first letter disappears, even when the first letter is wrong!
+
+
 cellsFromProblem : Problem -> Cons Cell
 cellsFromProblem { answer, attempt } =
     case attempt of

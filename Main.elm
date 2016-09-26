@@ -9,10 +9,14 @@ import Puzzle exposing (Puzzle)
 import Keyboard exposing (KeyCode)
 import View
 import Board
+import Http
+import Task
 
 
 type Msg
     = KeyMsg KeyCode
+    | FetchSucceed (Cons ( String, Cons Letter ))
+    | FetchFail Http.Error
 
 
 myPuzzle : Cons ( String, Cons Letter )
@@ -23,6 +27,10 @@ myPuzzle =
         , ( "A two-wheeled horse", cons B [ I, C, Y, C, L, E ] )
         , ( "A Dutch illustrator", cons W [ E, S, T, E, N, D, O, R, P ] )
         ]
+
+
+
+-- TODO: Expand model with fetching, failed states…
 
 
 model : Puzzle
@@ -36,6 +44,16 @@ update msg model =
         KeyMsg keycode ->
             ( Puzzle.update (Key.fromKeyCode keycode) model, Cmd.none )
 
+        FetchSucceed problems ->
+            ( Puzzle.create problems, Cmd.none )
+
+        FetchFail error ->
+            let
+                d =
+                    Debug.log "Fetch failed:" error
+            in
+                ( model, Cmd.none )
+
 
 subscriptions : Puzzle -> Sub Msg
 subscriptions model =
@@ -47,7 +65,7 @@ view model =
     case model of
         Puzzle.InProgress problems ->
             Html.div []
-                [ View.board (Board.fromPuzzle model 20 69)
+                [ View.board (Board.fromPuzzle model 50 69)
                 , View.problem (Cons.head problems)
                 ]
 
@@ -55,10 +73,19 @@ view model =
             Html.text "You did it!"
 
 
+getClues : Cmd Msg
+getClues =
+    let
+        url =
+            "http://gwil.co/projects/archeotype/dictionary.json"
+    in
+        Task.perform FetchFail FetchSucceed (Http.get Puzzle.fromJson url)
+
+
 main : Program Never
 main =
     Html.App.program
-        { init = ( model, Cmd.none )
+        { init = ( model, getClues )
         , update = update
         , subscriptions = subscriptions
         , view = view

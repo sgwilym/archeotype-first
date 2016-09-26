@@ -5,6 +5,9 @@ import Key exposing (Key(..))
 import Letter exposing (Letter)
 import Cons exposing (Cons, cons)
 import Attempt
+import Json.Decode as Json
+import String
+import Result.Extra
 
 
 type Puzzle
@@ -102,3 +105,53 @@ update key puzzle =
 
         Finished ->
             Finished
+
+
+fromJson : Json.Decoder (Cons ( String, Cons Letter ))
+fromJson =
+    let
+        toProblemResult ( answer, hint ) =
+            case Cons.fromList (List.map Letter.fromChar (String.toList answer)) of
+                Just answer' ->
+                    Result.Ok ( hint, answer' )
+
+                Nothing ->
+                    Result.Err "No letters found in a answer!"
+    in
+        Json.customDecoder
+            (Json.keyValuePairs Json.string)
+            (\jsonList ->
+                case jsonList of
+                    [ head ] ->
+                        case toProblemResult head of
+                            Result.Ok problem ->
+                                Result.Ok (cons problem [])
+
+                            Result.Err error ->
+                                Result.Err error
+
+                    head :: tail ->
+                        let
+                            results =
+                                List.map toProblemResult ([ head ] ++ tail)
+                        in
+                            case results of
+                                head :: tail ->
+                                    case Result.Extra.combine results of
+                                        Result.Ok goodResults ->
+                                            case Cons.fromList goodResults of
+                                                Just puzzle ->
+                                                    Result.Ok puzzle
+
+                                                Nothing ->
+                                                    Result.Err "Couldn't make the good results into a puzzle…"
+
+                                        Result.Err error ->
+                                            Result.Err error
+
+                                [] ->
+                                    Result.Err "No problems found in Json!"
+
+                    [] ->
+                        Result.Err "No problems found in Json!"
+            )
