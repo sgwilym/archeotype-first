@@ -21,10 +21,6 @@ type alias Board =
     }
 
 
-
--- BUG: the first letter disappears, even when the first letter is wrong!
-
-
 cellsFromProblem : Problem -> Cons Cell
 cellsFromProblem { answer, attempt } =
     case attempt of
@@ -33,36 +29,52 @@ cellsFromProblem { answer, attempt } =
                 attemptLetters =
                     case Attempt.last attempt' of
                         Attempt.Failure _ ->
-                            let
-                                allLetters =
-                                    Attempt.toLetters attempt'
-                            in
-                                cons
-                                    (Cons.head allLetters)
-                                    (List.take
-                                        (List.length (Cons.tail allLetters) - 1)
-                                        (Cons.tail allLetters)
-                                    )
+                              let
+                                  allLetters =
+                                      Attempt.toLetters attempt'
+                              in
+                                  case Cons.toList allLetters of
+                                    [head] ->
+                                       Nothing
+
+                                    head::rest ->
+                                      Just (
+                                      cons
+                                          head
+                                          (List.take
+                                              ((List.length rest) - 1)
+                                              rest
+                                          )
+                                          )
+
+                                    [] ->
+                                      Nothing
+
 
                         Attempt.Success _ _ ->
-                            Attempt.toLetters attempt'
+                            Just (Attempt.toLetters attempt')
 
                         Attempt.Complete _ ->
-                            Attempt.toLetters attempt'
+                            Just (Attempt.toLetters attempt')
 
                         Attempt.Incomplete _ ->
-                            Attempt.toLetters attempt'
+                            Just (Attempt.toLetters attempt')
             in
-                Cons.indexedMap
-                    (\index letter ->
-                        case index < (Cons.length attemptLetters) of
-                            True ->
-                                EmptyCell
+                case attemptLetters of
+                  Just letters ->
+                    Cons.indexedMap
+                        (\index letter ->
+                            case index < (Cons.length letters) of
+                                True ->
+                                    EmptyCell
 
-                            False ->
-                                Cell letter
-                    )
-                    answer
+                                False ->
+                                    Cell letter
+                        )
+                        answer
+
+                  Nothing ->
+                    Cons.map (\letter -> Cell letter) answer
 
         Nothing ->
             Cons.map (\letter -> Cell letter) answer
