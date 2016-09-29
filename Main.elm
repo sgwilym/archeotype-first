@@ -7,6 +7,7 @@ import Key exposing (Key)
 import Letter exposing (Letter(..))
 import Puzzle exposing (Puzzle)
 import Keyboard exposing (KeyCode)
+import Problem
 import View
 import Board
 import Http
@@ -42,7 +43,11 @@ update : Msg -> Puzzle -> ( Puzzle, Cmd a )
 update msg model =
     case msg of
         KeyMsg keycode ->
-            ( Puzzle.update (Key.fromKeyCode keycode) model, Cmd.none )
+            let
+                d2 =
+                    Debug.log "keycode" keycode
+            in
+                ( Puzzle.update (Key.fromKeyCode keycode) model, Cmd.none )
 
         FetchSucceed problems ->
             ( Puzzle.create problems, Cmd.none )
@@ -57,7 +62,7 @@ update msg model =
 
 subscriptions : Puzzle -> Sub Msg
 subscriptions model =
-    Keyboard.presses KeyMsg
+    Keyboard.downs KeyMsg
 
 
 view : Puzzle -> Html a
@@ -85,7 +90,7 @@ getClues =
 main : Program Never
 main =
     Html.App.program
-        { init = ( model, getClues )
+        { init = ( model, Cmd.none )
         , update = update
         , subscriptions = subscriptions
         , view = view

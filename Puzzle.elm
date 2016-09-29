@@ -49,7 +49,7 @@ cyclePrevious problems =
                     Cons.head (Cons.reverse problems)
 
                 remainingProblems =
-                    List.take (List.length rest - 1) rest
+                    List.take (List.length (Cons.tail problems) - 1) (Cons.tail problems)
             in
                 cons lastProblem ([ Cons.head problems ] ++ remainingProblems)
 

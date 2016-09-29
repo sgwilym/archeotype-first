@@ -1,4 +1,4 @@
-module Problem exposing (Problem, create, update)
+module Problem exposing (Problem, create, update, isComplete, isIncomplete)
 
 import Attempt exposing (Attempt(..))
 import Key exposing (AttemptKey(..))
@@ -34,3 +34,23 @@ update key problem =
 
                 Backspace ->
                     problem
+
+
+isComplete : Problem -> Bool
+isComplete { attempt } =
+    case attempt of
+        Just attempt' ->
+            Attempt.complete attempt'
+
+        Nothing ->
+            False
+
+
+isIncomplete : Problem -> Bool
+isIncomplete problem =
+    case problem.attempt of
+        Just attempt ->
+            not (isComplete problem)
+
+        Nothing ->
+            True
