@@ -1,10 +1,19 @@
 module View exposing (..)
 
 import Html exposing (Html)
+import Html.Attributes
 import Attempt exposing (Attempt)
 import Problem exposing (Problem)
 import Board exposing (Board, Cell(..))
+import String
+import Letter exposing (Letter)
 import Cons
+
+
+type Colour
+    = Black
+    | Red
+    | Green
 
 
 board : Board -> Html msg
@@ -47,7 +56,7 @@ problem : Problem -> Html msg
 problem problem =
     Html.div []
         [ hint problem.hint
-        , attempt problem.attempt
+        , maybeAttempt problem.attempt
         ]
 
 
@@ -58,13 +67,56 @@ hint hint =
         ]
 
 
-attempt : Maybe Attempt -> Html msg
-attempt attempt =
-    case attempt of
-        Just attempt' ->
+
+-- NEXT: Make a nice recursive function out of this
+
+
+attemptLetter : Colour -> Letter -> Html msg
+attemptLetter colour letter =
+    let
+        colorValue =
+            case colour of
+                Black ->
+                    "black"
+
+                Red ->
+                    "red"
+
+                Green ->
+                    "green"
+    in
+        Html.span [ Html.Attributes.style [ ( "color", colorValue ) ] ]
+            [ Html.text (String.fromChar (Letter.toChar letter)) ]
+
+
+attempt : Attempt -> List (Html msg)
+attempt attempt' =
+    case attempt' of
+        Attempt.Success letter nextAttempt ->
+            case Attempt.last attempt' of
+                Attempt.Complete _ ->
+                    [ attemptLetter Green letter ] ++ attempt nextAttempt
+
+                _ ->
+                    [ attemptLetter Black letter ] ++ attempt nextAttempt
+
+        Attempt.Failure letter ->
+            [ attemptLetter Red letter ]
+
+        Attempt.Complete letter ->
+            [ attemptLetter Green letter ]
+
+        Attempt.Incomplete letter ->
+            [ attemptLetter Black letter ]
+
+
+maybeAttempt : Maybe Attempt -> Html msg
+maybeAttempt attempt' =
+    case attempt' of
+        Just justAttempt ->
             Html.div []
-                [ Html.text (toString (Attempt.toLetters attempt'))
-                ]
+                (attempt justAttempt)
 
         Nothing ->
-            Html.div [] [ Html.text "Start typing!" ]
+            Html.div []
+                [ Html.text "Start typing!" ]
