@@ -126,7 +126,7 @@ problemAttempt problem =
 
         Nothing ->
             Html.div []
-                [ Html.text "Start typing!" ]
+                (List.repeat (Cons.length problem.answer) (Html.span [] [ Html.text "?" ]))
 
 
 problemsRemaining : Cons Problem -> Html msg
