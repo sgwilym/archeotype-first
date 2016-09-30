@@ -90,7 +90,7 @@ getClues =
 main : Program Never
 main =
     Html.App.program
-        { init = ( model, Cmd.none )
+        { init = ( model, getClues )
         , update = update
         , subscriptions = subscriptions
         , view = view

@@ -37,9 +37,9 @@ cell lastInRow cell =
         Cell letter ->
             Html.text
                 (if lastInRow then
-                    toString letter ++ "\n"
+                    String.fromChar (Letter.toChar letter) ++ "\n"
                  else
-                    toString letter
+                    String.fromChar (Letter.toChar letter)
                 )
 
         EmptyCell ->
