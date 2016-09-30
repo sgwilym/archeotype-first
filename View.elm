@@ -7,7 +7,7 @@ import Problem exposing (Problem)
 import Board exposing (Board, Cell(..))
 import String
 import Letter exposing (Letter)
-import Cons
+import Cons exposing (Cons)
 
 
 type Colour
@@ -56,7 +56,7 @@ problem : Problem -> Html msg
 problem problem =
     Html.div []
         [ hint problem.hint
-        , maybeAttempt problem.attempt
+        , problemAttempt problem
         ]
 
 
@@ -110,13 +110,28 @@ attempt attempt' =
             [ attemptLetter Black letter ]
 
 
-maybeAttempt : Maybe Attempt -> Html msg
-maybeAttempt attempt' =
-    case attempt' of
-        Just justAttempt ->
-            Html.div []
-                (attempt justAttempt)
+problemAttempt : Problem -> Html msg
+problemAttempt problem =
+    case problem.attempt of
+        Just attempt' ->
+            let
+                remainingNumberOfLetters =
+                    Cons.length (problem.answer)
+                        - Attempt.length attempt'
+            in
+                Html.div []
+                    ((attempt attempt')
+                        ++ (List.repeat remainingNumberOfLetters (Html.span [] [ Html.text "?" ]))
+                    )
 
         Nothing ->
             Html.div []
                 [ Html.text "Start typing!" ]
+
+
+problemsRemaining : Cons Problem -> Html msg
+problemsRemaining problems =
+    Html.div []
+        [ Html.text
+            (toString (List.length (Cons.filter Problem.isIncomplete problems)) ++ " problem(s) remaining")
+        ]

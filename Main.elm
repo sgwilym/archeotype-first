@@ -7,7 +7,6 @@ import Key exposing (Key)
 import Letter exposing (Letter(..))
 import Puzzle exposing (Puzzle)
 import Keyboard exposing (KeyCode)
-import Problem
 import View
 import Board
 import Http
@@ -71,6 +70,7 @@ view model =
         Puzzle.InProgress problems ->
             Html.div []
                 [ View.board (Board.fromPuzzle model 50 69)
+                , View.problemsRemaining (problems)
                 , View.problem (Cons.head problems)
                 ]
 

@@ -31,6 +31,7 @@ type Letter
     | X
     | Y
     | Z
+    | QuestionMark
 
 
 transposeCase : KeyCode -> KeyCode
@@ -123,7 +124,7 @@ fromChar char =
             Z
 
         _ ->
-            Z
+            QuestionMark
 
 
 toChar : Letter -> Char
@@ -206,3 +207,6 @@ toChar letter =
 
         Z ->
             'Z'
+
+        QuestionMark ->
+            '?'

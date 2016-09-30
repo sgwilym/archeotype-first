@@ -1,4 +1,4 @@
-module Attempt exposing (Attempt(..), create, update, last, complete, toLetters)
+module Attempt exposing (Attempt(..), create, update, last, complete, toLetters, length)
 
 import Key exposing (AttemptKey(..))
 import Letter exposing (Letter)
@@ -95,6 +95,16 @@ fromLetters letters answer =
 
         [] ->
             Complete (Cons.head letters)
+
+
+length : Attempt -> Int
+length attempt =
+    case attempt of
+        Success _ attempt ->
+            1 + length attempt
+
+        _ ->
+            1
 
 
 last : Attempt -> Attempt
