@@ -83,8 +83,11 @@ cellsFromProblem { answer, attempt } =
 fromPuzzle : Puzzle -> Int -> Int -> Board
 fromPuzzle puzzle width seed =
     case puzzle of
-        InProgress problems ->
+        InProgress problems solved ->
             let
+                allProblems =
+                    Cons.appendList problems solved
+
                 problemToChars =
                     \problem ->
                         Cons.map Letter.toChar problem.answer
@@ -99,11 +102,11 @@ fromPuzzle puzzle width seed =
 
                 -- [['C', A, T], [D, O, G], [A, P, P, L, E]]
                 problemChars =
-                    Cons.map problemToChars problems
+                    Cons.map problemToChars allProblems
 
                 -- [EmptyCell, EmptyCell, Cell P, Cell P, Cell L, etc... ]
                 problemCells =
-                    Cons.map cellsFromProblem problems
+                    Cons.map cellsFromProblem allProblems
 
                 -- (['A', 'P', 'P', 'L', 'E'] , [EmptyCell, EmptyCell, Cell P, Cell L, Cell E])
                 ( sortedChars, sortedCells ) =

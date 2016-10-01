@@ -11,7 +11,7 @@ import Result.Extra
 
 
 type Puzzle
-    = InProgress (Cons Problem)
+    = InProgress (Cons Problem) (List Problem)
     | Finished
 
 
@@ -22,6 +22,7 @@ create problems =
             (\( hint, answer ) -> Problem.create hint answer)
             problems
         )
+        []
 
 
 cycleNext : Cons Problem -> Cons Problem
@@ -57,19 +58,49 @@ cyclePrevious problems =
             problems
 
 
+progress : Puzzle -> Puzzle
+progress puzzle =
+    case puzzle of
+        InProgress problems solved ->
+            case Cons.tail problems of
+                [ head ] ->
+                    case Problem.isComplete head of
+                        True ->
+                            InProgress (cons (Cons.head problems) []) (solved ++ [ head ])
+
+                        False ->
+                            puzzle
+
+                head :: rest ->
+                    InProgress
+                        (cons (Cons.head problems) (List.filter Problem.isIncomplete ([ head ] ++ rest)))
+                        (List.filter Problem.isComplete ([ head ] ++ rest ++ solved))
+
+                [] ->
+                    case Problem.isComplete (Cons.head problems) of
+                        True ->
+                            Finished
+
+                        False ->
+                            puzzle
+
+        Finished ->
+            puzzle
+
+
 update : Key -> Puzzle -> Puzzle
 update key puzzle =
     case puzzle of
-        InProgress problems ->
+        InProgress problems solved ->
             case key of
                 Space ->
-                    InProgress (cycleNext problems)
+                    progress (InProgress (cycleNext problems) solved)
 
                 Down ->
-                    InProgress (cycleNext problems)
+                    progress (InProgress (cycleNext problems) solved)
 
                 Up ->
-                    InProgress (cyclePrevious problems)
+                    progress (InProgress (cyclePrevious problems) solved)
 
                 ProblemKey key ->
                     let
@@ -98,7 +129,7 @@ update key puzzle =
                                 Finished
 
                             False ->
-                                InProgress problems'
+                                InProgress problems' solved
 
                 Unrecognised ->
                     puzzle

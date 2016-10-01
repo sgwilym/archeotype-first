@@ -42,11 +42,7 @@ update : Msg -> Puzzle -> ( Puzzle, Cmd a )
 update msg model =
     case msg of
         KeyMsg keycode ->
-            let
-                d2 =
-                    Debug.log "keycode" keycode
-            in
-                ( Puzzle.update (Key.fromKeyCode keycode) model, Cmd.none )
+            ( Puzzle.update (Key.fromKeyCode keycode) model, Cmd.none )
 
         FetchSucceed problems ->
             ( Puzzle.create problems, Cmd.none )
@@ -67,7 +63,7 @@ subscriptions model =
 view : Puzzle -> Html a
 view model =
     case model of
-        Puzzle.InProgress problems ->
+        Puzzle.InProgress problems solved ->
             Html.div []
                 [ View.board (Board.fromPuzzle model 50 69)
                 , View.problemsRemaining (problems)
@@ -90,7 +86,7 @@ getClues =
 main : Program Never
 main =
     Html.App.program
-        { init = ( model, getClues )
+        { init = ( model, Cmd.none )
         , update = update
         , subscriptions = subscriptions
         , view = view

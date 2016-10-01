@@ -133,5 +133,5 @@ problemsRemaining : Cons Problem -> Html msg
 problemsRemaining problems =
     Html.div []
         [ Html.text
-            (toString (List.length (Cons.filter Problem.isIncomplete problems)) ++ " problem(s) remaining")
+            ((toString (Cons.length problems)) ++ " problem(s) remaining")
         ]
