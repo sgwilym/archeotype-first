@@ -107,7 +107,7 @@ attempt attempt' =
             [ attemptLetter Green letter ]
 
         Attempt.Incomplete letter ->
-            [ attemptLetter Black letter ]
+            [ attemptLetter Green letter ]
 
 
 problemAttempt : Problem -> Html msg
