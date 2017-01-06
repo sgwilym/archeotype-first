@@ -25,6 +25,25 @@ create problems =
         []
 
 
+remainingLetters : Puzzle -> Int
+remainingLetters puzzle =
+    case puzzle of
+        InProgress remaining solved ->
+            let
+                remainingCount =
+                    Cons.map (Problem.remaining) remaining
+                        |> Cons.foldl1 (+)
+
+                solvedCount =
+                    List.map (Problem.remaining) solved
+                        |> List.foldl (+) 0
+            in
+                remainingCount - solvedCount
+
+        Finished ->
+            0
+
+
 cycleNext : Cons Problem -> Cons Problem
 cycleNext problems =
     case Cons.tail problems of

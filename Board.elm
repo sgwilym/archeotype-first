@@ -1,7 +1,8 @@
-module Board exposing (Board, Cell(..), fromPuzzle)
+module Board exposing (Board, Cell(..), create)
 
 import Cons exposing (Cons, cons)
 import Puzzle exposing (Puzzle(..))
+import HiddenPicture exposing (HiddenPicture, Space(..), Grid(..))
 import Problem exposing (Problem)
 import Attempt
 import Letter exposing (Letter(..))
@@ -17,8 +18,8 @@ type Cell
 
 type alias Board =
     { cells : Cons Cell
-    , width : Int
     , seed : Int
+    , width : Int
     }
 
 
@@ -80,8 +81,53 @@ cellsFromProblem { answer, attempt } =
             Cons.map (\letter -> Cell letter) answer
 
 
-fromPuzzle : Puzzle -> Int -> Int -> Board
-fromPuzzle puzzle width seed =
+zipSpacesWithCells : Cons Space -> Cons Cell -> Cons Cell
+zipSpacesWithCells spaces cells =
+    let
+        head =
+            case Cons.head spaces of
+                Open ->
+                    Cons.head cells
+
+                Closed ->
+                    EmptyCell
+
+        tail =
+            case head of
+                Cell _ ->
+                    case Cons.tail' cells of
+                        Just moreCells ->
+                            case Cons.tail' spaces of
+                                Just moreSpaces ->
+                                    Cons.toList (zipSpacesWithCells moreSpaces moreCells)
+
+                                Nothing ->
+                                    []
+
+                        Nothing ->
+                            []
+
+                EmptyCell ->
+                    case Cons.tail' cells of
+                        Just moreCells ->
+                            case Cons.tail' spaces of
+                                Just moreSpaces ->
+                                    Cons.toList (zipSpacesWithCells moreSpaces cells)
+
+                                Nothing ->
+                                    []
+
+                        Nothing ->
+                            []
+
+        d =
+            Debug.log "zipSpacesWithCells result:" (Cons.cons head tail)
+    in
+        Cons.cons head tail
+
+
+create : Puzzle -> HiddenPicture -> Int -> Board
+create puzzle hiddenPicture seed =
     case puzzle of
         InProgress problems solved ->
             let
@@ -135,8 +181,17 @@ fromPuzzle puzzle width seed =
                     Cons.map2 (,) flatCells randomValues
                         |> Cons.sortBy snd
                         |> Cons.map fst
+
+                -- zip the picture’s spaces with the shuffled cells
+                ( spaces, width ) =
+                    case hiddenPicture.grid of
+                        Grid spaces width ->
+                            ( spaces, width )
+
+                shuffledArrangedCells =
+                    zipSpacesWithCells spaces shuffledCells
             in
-                { cells = shuffledCells, width = width, seed = seed }
+                { cells = shuffledArrangedCells, width = width, seed = seed }
 
         Finished ->
-            { cells = cons EmptyCell [], width = width, seed = seed }
+            { cells = cons EmptyCell [], width = 0, seed = seed }

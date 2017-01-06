@@ -6,81 +6,80 @@ import Cons exposing (Cons, cons)
 import Key exposing (Key)
 import Letter exposing (Letter(..))
 import Puzzle exposing (Puzzle)
+import HiddenPicture exposing (HiddenPicture, Space(..))
 import Keyboard exposing (KeyCode)
 import View
 import Board
-import Http
-import Task
 
 
 type Msg
     = KeyMsg KeyCode
-    | FetchSucceed (Cons ( String, Cons Letter ))
-    | FetchFail Http.Error
 
 
-myPuzzle : Cons ( String, Cons Letter )
-myPuzzle =
-    cons ( "A stripey horse", cons Z [ E, B, R, A ] )
-        [ ( "A nationalistic root vegetable", cons C [ A, R, R, O, T ] )
-        , ( "A naughty kot!", cons R [ O, K, K, A, K, U ] )
-        , ( "A two-wheeled horse", cons B [ I, C, Y, C, L, E ] )
-        , ( "A Dutch illustrator", cons W [ E, S, T, E, N, D, O, R, P ] )
+type alias Model =
+    { currentGame : ( Puzzle, HiddenPicture ) }
+
+
+canemPuzzle : Cons ( String, Cons Letter )
+canemPuzzle =
+    cons ( "Jumps high, bites small", cons F [ L, E, A, S ] )
+        [ ( "Worn by shirts and hounds", cons C [ O, L, L, A, R ] )
+        , ( "A healthy mix, looked down upon", cons M [ O, N, G, R, E, L ] )
+        , ( "A fashionable game", cons F [ E, T, C, H ] )
+        , ( "Often better than tree skin", cons B [ I, T, E ] )
+        , ( "A clue for guard", cons G [ U, A, R, D ] )
+        , ( "A clue for fur", cons F [ U, R ] )
+        , ( "Teeth and family", cons C [ A, N, I, N, E ] )
+        , ( "A clue for howl", cons H [ O, W, L ] )
+        , ( "Often worse than a bite", cons B [ A, R, K ] )
         ]
 
 
+canemHiddenPicture : HiddenPicture
+canemHiddenPicture =
+    { source = "./pictures/canem.png"
+    , grid =
+        HiddenPicture.Grid
+            (cons Open [ Closed, Closed, Open, Closed, Closed, Closed, Closed, Open, Open, Open, Open, Open, Open, Open, Closed, Closed, Closed, Closed ])
+            10
+    }
 
--- TODO: Expand model with fetching, failed states…
 
-
-model : Puzzle
+model : Model
 model =
-    Puzzle.create myPuzzle
+    { currentGame = ( Puzzle.create canemPuzzle, canemHiddenPicture ) }
 
 
-update : Msg -> Puzzle -> ( Puzzle, Cmd a )
+update : Msg -> Model -> ( Model, Cmd a )
 update msg model =
     case msg of
         KeyMsg keycode ->
-            ( Puzzle.update (Key.fromKeyCode keycode) model, Cmd.none )
-
-        FetchSucceed problems ->
-            ( Puzzle.create problems, Cmd.none )
-
-        FetchFail error ->
-            let
-                d =
-                    Debug.log "Fetch failed:" error
-            in
-                ( model, Cmd.none )
+            ( { currentGame =
+                    ( (Puzzle.update (Key.fromKeyCode keycode) (fst model.currentGame))
+                    , (snd model.currentGame)
+                    )
+              }
+            , Cmd.none
+            )
 
 
-subscriptions : Puzzle -> Sub Msg
+subscriptions : Model -> Sub Msg
 subscriptions model =
     Keyboard.downs KeyMsg
 
 
-view : Puzzle -> Html a
+view : Model -> Html a
 view model =
-    case model of
+    case (fst model.currentGame) of
         Puzzle.InProgress problems solved ->
             Html.div []
-                [ View.board (Board.fromPuzzle model 50 69)
+                [ View.board (Board.create (fst model.currentGame) (snd model.currentGame) 69)
                 , View.problemsRemaining (problems)
                 , View.problem (Cons.head problems)
                 ]
 
         Puzzle.Finished ->
             Html.text "You did it!"
-
-
-getClues : Cmd Msg
-getClues =
-    let
-        url =
-            "http://gwil.co/projects/archeotype/dictionary.json"
-    in
-        Task.perform FetchFail FetchSucceed (Http.get Puzzle.fromJson url)
 
 
 main : Program Never

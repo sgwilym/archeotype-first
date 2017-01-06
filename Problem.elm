@@ -1,4 +1,4 @@
-module Problem exposing (Problem, create, update, isComplete, isIncomplete)
+module Problem exposing (Problem, create, update, isComplete, isIncomplete, remaining)
 
 import Attempt exposing (Attempt(..))
 import Key exposing (AttemptKey(..))
@@ -54,3 +54,13 @@ isIncomplete problem =
 
         Nothing ->
             True
+
+
+remaining : Problem -> Int
+remaining { answer, attempt } =
+    case attempt of
+        Just attempt ->
+            (Cons.length answer) - (Attempt.length attempt)
+
+        Nothing ->
+            Cons.length answer
