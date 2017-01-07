@@ -37,12 +37,18 @@ canemPuzzle =
 
 canemHiddenPicture : HiddenPicture
 canemHiddenPicture =
-    { source = "./pictures/canem.png"
-    , grid =
-        HiddenPicture.Grid
-            (cons Open [ Closed, Closed, Open, Closed, Closed, Closed, Closed, Open, Open, Open, Open, Open, Open, Open, Closed, Closed, Closed, Closed ])
-            10
-    }
+    HiddenPicture.create
+        "./pictures/canem.png"
+        """
+          # #
+ #        #####
+ #        ###
+ ############
+ ############
+ ##        ##
+ #          #
+ ##         ##
+"""
 
 
 model : Model
