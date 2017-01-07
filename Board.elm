@@ -84,6 +84,8 @@ cellsFromProblem { answer, attempt } =
 zipSpacesWithCells : Cons Space -> Cons Cell -> Cons Cell
 zipSpacesWithCells spaces cells =
     let
+        -- if the head of spaces is open, then the returned head should be a letter
+        -- if it's closed, the head should be an empty cell
         head =
             case Cons.head spaces of
                 Open ->
@@ -93,8 +95,10 @@ zipSpacesWithCells spaces cells =
                     EmptyCell
 
         tail =
+            -- if the head is a cell, then we want to get more cells
             case head of
                 Cell _ ->
+                    -- if there are more cells, and more spaces, we want to zip those up
                     case Cons.tail' cells of
                         Just moreCells ->
                             case Cons.tail' spaces of
@@ -107,21 +111,37 @@ zipSpacesWithCells spaces cells =
                         Nothing ->
                             []
 
+                -- if the cell is empty, we need to figure out if we should pass ALL of the cells
+                -- on the the next call, or just the tail
                 EmptyCell ->
-                    case Cons.tail' cells of
-                        Just moreCells ->
+                    case Cons.head spaces of
+                        Closed ->
+                            -- This is definitely emptycell because of a blocked space
                             case Cons.tail' spaces of
                                 Just moreSpaces ->
-                                    Cons.toList (zipSpacesWithCells moreSpaces cells)
+                                    case Cons.tail' cells of
+                                        Just moreCells ->
+                                            Cons.toList (zipSpacesWithCells moreSpaces cells)
+
+                                        Nothing ->
+                                            []
 
                                 Nothing ->
                                     []
 
-                        Nothing ->
-                            []
+                        Open ->
+                            -- This is definitely emptycell because of the player
+                            case Cons.tail' spaces of
+                                Just moreSpaces ->
+                                    case Cons.tail' cells of
+                                        Just moreCells ->
+                                            Cons.toList (zipSpacesWithCells moreSpaces moreCells)
 
-        d =
-            Debug.log "zipSpacesWithCells result:" (Cons.cons head tail)
+                                        Nothing ->
+                                            []
+
+                                Nothing ->
+                                    []
     in
         Cons.cons head tail
 
