@@ -8,6 +8,8 @@ import Board exposing (Board, Cell(..))
 import String
 import Letter exposing (Letter)
 import Cons exposing (Cons)
+import List.Split exposing (..)
+import Html.Attributes exposing (style)
 
 
 type Colour
@@ -16,40 +18,49 @@ type Colour
     | Green
 
 
+rowStyle : Html.Attribute a
+rowStyle =
+    style
+        []
+
+
+cellStyle : Html.Attribute a
+cellStyle =
+    style [ ( "width", "50px" ), ( "height", "50px" ), ( "text-align", "center" ) ]
+
+
+coveredCellStyle : Html.Attribute a
+coveredCellStyle =
+    style [ ( "color", "white" ), ( "background-color", "black" ) ]
+
+
 board : Board -> Html msg
 board board =
-    Html.pre []
-        (Cons.toList
-            (Cons.indexedMap
-                (\index cell' ->
-                    cell
-                        (rem (index + 1) board.width == 0)
-                        cell'
+    let
+        rows =
+            chunksOfLeft board.width (Cons.toList board.cells)
+    in
+        Html.table []
+            (List.map
+                (\row ->
+                    Html.tr [] (List.map cell row)
                 )
-                board.cells
+                rows
             )
-        )
 
 
-cell : Bool -> Cell -> Html msg
-cell lastInRow cell =
+cell : Cell -> Html msg
+cell cell =
     case cell of
         Cell letter ->
-            Html.text
-                (if lastInRow then
-                    String.fromChar (Letter.toChar letter) ++ "\n"
-                 else
-                    String.fromChar (Letter.toChar letter)
-                )
+            Html.td
+                [ cellStyle, coveredCellStyle ]
+                [ Html.text (String.fromChar (Letter.toChar letter)) ]
 
         EmptyCell ->
-            Html.text
-                ((if lastInRow then
-                    " \n"
-                  else
-                    " "
-                 )
-                )
+            Html.td
+                [ cellStyle ]
+                [ Html.text "\t" ]
 
 
 problem : Problem -> Html msg
@@ -65,10 +76,6 @@ hint hint =
     Html.div []
         [ Html.text hint
         ]
-
-
-
--- NEXT: Make a nice recursive function out of this
 
 
 attemptLetter : Colour -> Letter -> Html msg

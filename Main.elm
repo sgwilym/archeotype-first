@@ -27,10 +27,10 @@ canemPuzzle =
         , ( "A healthy mix, looked down upon", cons M [ O, N, G, R, E, L ] )
         , ( "A fashionable game", cons F [ E, T, C, H ] )
         , ( "Often better than tree skin", cons B [ I, T, E ] )
-        , ( "A clue for guard", cons G [ U, A, R, D ] )
-        , ( "A clue for fur", cons F [ U, R ] )
+        , ( "A job fit for man’s best friend", cons G [ U, A, R, D ] )
+        , ( "Un_____ the beast", cons L [ E, A, S, H ] )
         , ( "Teeth and family", cons C [ A, N, I, N, E ] )
-        , ( "A clue for howl", cons H [ O, W, L ] )
+        , ( "The lingua franca of wolves and dogs", cons H [ O, W, L ] )
         , ( "Often worse than a bite", cons B [ A, R, K ] )
         ]
 
@@ -42,12 +42,13 @@ canemHiddenPicture =
         """
           # #
  #        #####
- #        ###
+ #        ####
  ############
  ############
- ##        ##
+ ###      ###
+ #         #
  #          #
- ##         ##
+ ##          ##
 """
 
 
