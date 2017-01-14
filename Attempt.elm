@@ -113,13 +113,7 @@ last attempt =
         Success _ attempt' ->
             last attempt'
 
-        Failure _ ->
-            attempt
-
-        Complete _ ->
-            attempt
-
-        Incomplete _ ->
+        _ ->
             attempt
 
 
@@ -129,11 +123,5 @@ complete attempt =
         Complete _ ->
             True
 
-        Incomplete _ ->
-            False
-
-        Success _ _ ->
-            False
-
-        Failure _ ->
+        _ ->
             False
